@@ -17,11 +17,10 @@ n_gpu_layers_val = 35
 llm = Llama(
     model_path=MODEL_PATH,
     n_gpu_layers=n_gpu_layers_val,
-    n_ctx=2048,
+    n_ctx=4096,
     n_threads=6,
     verbose=False 
 )
-
 
 # Alterações a fazer
 # 1 - Narrador
@@ -47,9 +46,17 @@ class StoryTeller():
         return ''.join(self.conversation_history)
 
     def generate_story(self, message: str, max_tokens=300):
-        prompt = f"[INST] <<SYS>>\n{self.sys_message}\n<</SYS>>\n\n The current history: {self.get_message()} \n Current history:{message} [/INST]"
-        output = llm(prompt, max_tokens=max_tokens, echo=False) 
-        self.conversation_history.append(output["choices"][0]["text"])
+        prompt = f"[INST] <<SYS>>\n{self.sys_message}\n<</SYS>>\n\n" \
+             f"[NO CONVERSATIONAL ACKNOWLEDGMENTS ALLOWED]\n" \
+             f"The current history: {self.get_message()}\n" \
+             f"Current description: {message} [/INST]"
+        
+        output = self.model(prompt, max_tokens=max_tokens, echo=False) 
+        response = output["choices"][0]["text"]
+        if any(phrase in response.lower() for phrase in ["here", "sure", "great"]): # If it has unncecessary information
+            response = " " + '\n'.join(line for line in response.split("\n") if not any(phrase in line.lower() for phrase in ["here", "sure", "great"]))
+
+        self.conversation_history.append(response)
 
 # Encoders
 model_name = "Salesforce/blip2-opt-2.7b"
@@ -57,10 +64,12 @@ processor = Blip2Processor.from_pretrained(model_name, cache_dir="models/blip2_p
 model = Blip2ForConditionalGeneration.from_pretrained(model_name, cache_dir="models/blip2_model", torch_dtype=torch.float32).to(device).eval()
 
 class Visualizer():
-    def __init__(self, model, processor, yolo_model):
+    def __init__(self, model, processor, yolo_model, sys_prompt, llm):
         self.model = model
         self.processor = processor
         self.yolo_model = yolo_model
+        self.sys_prompt = sys_prompt
+        self.llm = llm
 
     def generate_caption(self, image):
         with torch.no_grad():
@@ -79,6 +88,12 @@ class Visualizer():
         named_counts = {self.yolo_model.names[cid]: count for cid, count in class_counts.items()}
 
         return named_counts
+    
+    def generate_better_caption(self, caption, context, max_tokens = 50):
+        prompt = f"[INST] <<SYS>>\n{self.sys_prompt}\n<</SYS>>\n\n The current history: {context} \n Current caption:{caption} [/INST]"
+        output = self.llm(prompt, max_tokens=max_tokens, echo=False) 
+        return output["choices"][0]["text"]
+
         
 # Object detection
 yolo_model = YOLO("models/yolo11x.pt").to(device).eval() # Use n-nano, s-small, m-medium, l-large, x-xtra large
@@ -147,23 +162,60 @@ def main():
         return
     
     genre = str(input("What genre do you wish the story to be in? "))
-    system_prompt = f"""You are a creative storyteller of the {genre} genre. Your SOLE task is to generate a story. DO NOT include any introductory or concluding remarks, explanations, or 
-    conversational filler. ONLY output the 1-2 sentence story, NOTHING else. Your every output should be related to the current history, but MAKE SURE it sounds like a natural continuation"""
-    storyteller = StoryTeller(system_prompt, llm)
-    visual = Visualizer(model, processor, yolo_model)
-    for img in frames:
+
+    system_prompt1 = f"""
+    You are a creative storyteller in the {genre} genre. Your ONLY task is to generate exactly 1–2 sentences that naturally continue the current story, 
+    while integrating relevant details from the current image description. 
+
+    🛑 **DO NOT**:
+    - Include any introductions, confirmations, conclusions, or conversational fillers.
+    - Say things like "Great!", "Here it is:", "Sure," or "Okay, here you go."
+    - Acknowledge the request in any way before or after the sentences.
+
+    ⚠️ **FAILURE CONDITIONS**:
+    - If you produce any text other than the 1–2 sentence continuation, it is considered an ERROR.
+    - If you acknowledge your action in any way, it is considered an ERROR.
+    - If you do not follow this structure exactly, it is considered an ERROR.
+
+    🔎 **OUTPUT REQUIREMENT**:
+    - Only the 1–2 sentence continuation. NOTHING else.
+    - It must appear as if it is part of the story, with no extra commentary or formatting.
+    """
+
+    system_prompt2 = f"""
+    You are a Visual Encoder. Your ONLY task is to provide a single, context-based description of an image, 
+    informed by the previous story and the current image's description. 
+
+    🛑 **DO NOT**:
+    - Add any narrative or storytelling.
+    - Include introductions, conclusions, or conversational fillers.
+    - Write more than one sentence—exactly one concise, visual summary is required.
+
+    🔎 **OUTPUT REQUIREMENT**:
+    - Only the single, descriptive sentence. NOTHING else.
+    - It must appear as a clear, visual summary, with no extra commentary or formatting."""
+
+    storyteller = StoryTeller(system_prompt1, llm)
+    visual = Visualizer(model, processor, yolo_model, system_prompt2, llm)
+    end = ""
+    for i, img in enumerate(frames):
         caption = visual.generate_caption(img)
         objects = visual.get_objects(img)
+        context = storyteller.get_message()
+        better_caption = visual.generate_better_caption(caption, context)
         if objects:
             objects_str = ', '.join([f"{obj}: {objects[obj]}" for obj in objects.keys()])
         else:
             objects_str = "No objects detected"
 
-        prompt = f"Plot: {caption}\nObjects: [{objects_str}]"
+        if i == len(frames) - 1:
+            end = "\nStory ends after this turn"
+
+        prompt = f"Plot: {better_caption}\nObjects: [{objects_str}]  {end} "
         print(f"\n {prompt}")
         storyteller.generate_story(prompt)
         print(f"\n{storyteller.get_message()}")    
     
-    
+
 if __name__ == "__main__":
     main()

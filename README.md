@@ -63,7 +63,7 @@ python main.py
 
 # 📌 At the end, press any key to view the narrated story frame-by-frame.
 
-🎮 Choose Your Genre
+## 🎮 Choose Your Genre
 You'll be prompted to select the story's theme:
 
 vbnet
@@ -88,7 +88,7 @@ Examples:
 
 This genre is passed as context to the LLM.
 
-🧪 Voice Cloning (Optional)
+## 🧪 Voice Cloning (Optional)
 Record a 20-second voice sample and save it as:
 audio/reference_audio.wav
 
@@ -99,7 +99,7 @@ Install and configure F5-TTS or your preferred voice model.
 Make sure the CLI tool is available:
 f5-tts_infer-cli --text "Your story here" --ref audio/reference_audio.wav
 
-📽️ Output
+## 📽️ Output
 Once the story and narration are generated, the program displays a slideshow:
 
 Each image appears
@@ -110,7 +110,7 @@ Audio is played frame-by-frame
 
 You can save the audio (outputX.wav) from /tests/.
 
-🧠 Powered By
+## 🧠 Powered By
 BLIP-2 – Vision-Language model for captions
 
 YOLOv8 – Object detection
@@ -119,7 +119,7 @@ LLaMA 2 – Story generation LLM
 
 F5-TTS – Voice synthesis
 
-💡 Future Ideas
+## 💡 Future Ideas
 Add background music and transitions
 
 Support for longer stories (multi-paragraph)
@@ -128,5 +128,5 @@ Web-based drag-and-drop UI
 
 Real-time mobile integration
 
-📄 License
+## 📄 License
 MIT License – feel free to modify and build on this project.

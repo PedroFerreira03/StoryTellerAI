@@ -38,7 +38,8 @@ This project combines image captioning, object detection, LLM-based storytelling
 │   ├── llama-2-7b-chat.Q5_K_M.gguf
 │   └── yolo11x.pt
 ├── audio/
-│   └── reference_audio.wav     # 20s voice sample
+│   ├──  reference_audio.wav     # 10-20s voice sample
+    ├──  reference_text.txt      # Transcribed reference_audio.wav
 ├── tests/
 │   └── outputX.wav             # Output narrated files
 ├── PMBA_code.py                    # Run this file!

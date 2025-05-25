@@ -45,20 +45,22 @@ This project combines image captioning, object detection, LLM-based storytelling
 
 ---
 
-## 🚀 How to Run
+## 🚀 Getting Started
 
-# Clone repo and cd into it
+```bash
+# Clone the repo and navigate into the directory
 git clone https://github.com/yourusername/storycrafter.git
 cd storycrafter
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run and take new photos
+# Run and take new photos using your webcam
 python main.py --photo
 
-# Or run with existing images in the /images folder
+# Or run with existing images from the /images folder
 python main.py
+```
 
 # 📌 At the end, press any key to view the narrated story frame-by-frame.
 

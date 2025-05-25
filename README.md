@@ -47,7 +47,6 @@ This project combines image captioning, object detection, LLM-based storytelling
 
 ## 🚀 How to Run
 
-```bash
 # Clone repo and cd into it
 git clone https://github.com/yourusername/storycrafter.git
 cd storycrafter

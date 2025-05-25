@@ -41,7 +41,7 @@ This project combines image captioning, object detection, LLM-based storytelling
 │   └── reference_audio.wav     # 20s voice sample
 ├── tests/
 │   └── outputX.wav             # Output narrated files
-├── main.py                    # Run this file!
+├── PMBA_code.py                    # Run this file!
 └── README.md
 ```
 

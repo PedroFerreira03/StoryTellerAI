@@ -51,11 +51,8 @@ This project combines image captioning, object detection, LLM-based storytelling
 
 ```bash
 # Clone the repo and navigate into the directory
-git clone https://github.com/yourusername/storycrafter.git
-cd storycrafter
-
-# Install dependencies
-pip install -r requirements.txt
+git clone https://github.com/PedroFerreira03/StoryTellerAI
+cd StoryTellerAI
 
 # Run and take new photos using your webcam
 python main.py --photo

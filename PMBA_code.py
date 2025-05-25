@@ -4,14 +4,14 @@ import os
 import time
 import argparse
 import subprocess
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
-from ultralytics import YOLO
-from collections import Counter
-from llama_cpp import Llama
 import re
 import torchaudio
 import sounddevice as sd
 import numpy as np
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
+from ultralytics import YOLO
+from collections import Counter
+from llama_cpp import Llama
 
 # Path to images
 path_to_images = "images/"

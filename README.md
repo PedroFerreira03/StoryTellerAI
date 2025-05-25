@@ -30,18 +30,20 @@ This project combines image captioning, object detection, LLM-based storytelling
 
 ## 🗂 Folder Structure
 
-├── images/ # Input image frames (if not using webcam)
-├── models/ # All models stored here
-│ ├── blip2_model/
-│ ├── blip2_processor/
-│ ├── llama-2-7b-chat.Q5_K_M.gguf
-│ └── yolo11x.pt
+```
+├── images/               # Input image frames (if not using webcam)
+├── models/               # All models stored here
+│   ├── blip2_model/
+│   ├── blip2_processor/
+│   ├── llama-2-7b-chat.Q5_K_M.gguf
+│   └── yolo11x.pt
 ├── audio/
-│ └── reference_audio.wav # 20s voice sample
+│   └── reference_audio.wav     # 20s voice sample
 ├── tests/
-│ └── outputX.wav # Output narrated files
-├── main.py # Run this file!
+│   └── outputX.wav             # Output narrated files
+├── main.py                    # Run this file!
 └── README.md
+```
 
 ---
 

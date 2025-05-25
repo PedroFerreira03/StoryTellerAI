@@ -62,7 +62,7 @@ python main.py --photo
 python main.py
 ```
 
-# 📌 At the end, press any key to view the narrated story frame-by-frame.
+📌 At the end, press any key to view the narrated story frame-by-frame.
 
 ## 🎮 Choose Your Genre
 You'll be prompted to select the story's theme:

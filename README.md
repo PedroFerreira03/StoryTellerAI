@@ -65,9 +65,6 @@ python main.py
 ## 🎮 Choose Your Genre
 You'll be prompted to select the story's theme:
 
-vbnet
-Copiar
-Editar
 What genre do you wish the story to be in?
 Examples:
 

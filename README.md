@@ -1,107 +1,132 @@
-📸🧠 Visual Storyteller AI 🎬🗣️
-Turn a series of images into a visual story narrated in a custom voice!
-This Python-based project uses BLIP2, YOLOv8, LLaMA, and F5-TTS to generate descriptive captions, create storylines, and voice-narrate them — all with just a few images.
+# 📸🧠 StoryCrafter: AI-Powered Visual Storytelling
 
-🚀 Features
-🧠 BLIP2: Extract intelligent captions from each image
+Turn a series of images into a narrated short story using state-of-the-art AI models!  
+This project combines image captioning, object detection, LLM-based storytelling, and TTS voice narration.
 
-👁️ YOLOv8: Detect objects in the scene with real-time object detection
+---
 
-📝 LLaMA 2 Chat: Generate engaging, genre-specific stories from image sequences
+## 🎯 What It Does
 
-🔊 F5-TTS: Clone your voice from a 20-second reference and narrate the story
+1. 🖼️ **Capture or Load Images**  
+2. 🧠 **Generate Smart Captions** using [BLIP-2](https://huggingface.co/Salesforce/blip2-opt-2.7b)  
+3. 🔍 **Detect Objects** with [YOLOv8](https://github.com/ultralytics/ultralytics)  
+4. 📖 **Write a Genre-Specific Story** with [LLaMA 2](https://ai.meta.com/llama/)  
+5. 🔊 **Narrate the Story** using a cloned voice with [F5-TTS](https://github.com/TensorSpeech/FastSpeech2)  
+6. 🎬 **Display it with Subtitles and Audio** — like a slideshow movie!
 
-📷 Capture or Load: Use webcam or load images from a folder
+---
 
-🎭 Genre Selection: Pick a story genre (e.g., horror, fantasy, sci-fi) for personalized narration
+## 🧰 Requirements
 
-🖼️ Visual Display: Watch your story unfold with subtitles and voiceover
+- Python 3.9+
+- GPU (recommended)
+- Pre-trained models:
+  - `Salesforce/blip2-opt-2.7b`
+  - `YOLOv8` variant (`yolo11x.pt`)
+  - `llama-2-7b-chat.Q5_K_M.gguf`
+  - `F5-TTS` with cloned voice checkpoint
 
-🧰 Requirements
-Python 3.8+
+---
 
-GPU strongly recommended (BLIP2 and LLaMA are heavy)
+## 🗂 Folder Structure
 
-Dependencies (install via pip):
-
-pip install torch torchvision torchaudio transformers opencv-python ultralytics sounddevice llama-cpp-python
-Install F5-TTS and export your reference voice
-
-Download:
-
-LLaMA2 GGUF model (e.g., llama-2-7b-chat.Q5_K_M.gguf)
-
-BLIP2 and YOLO model weights
-
-Reference audio and text
-
-📂 Folder Structure
-css
-Copiar
-Editar
-.
-├── models/
-│   ├── blip2_model/
-│   ├── blip2_processor/
-│   ├── llama-2-7b-chat.Q5_K_M.gguf
-│   └── yolo11x.pt
+├── images/ # Input image frames (if not using webcam)
+├── models/ # All models stored here
+│ ├── blip2_model/
+│ ├── blip2_processor/
+│ ├── llama-2-7b-chat.Q5_K_M.gguf
+│ └── yolo11x.pt
 ├── audio/
-│   └── reference_audio.wav
-├── images/
-│   └── (your images go here)
+│ └── reference_audio.wav # 20s voice sample
 ├── tests/
-│   └── output1.wav ...
-├── your_script.py
-🧪 Run It!
-🔴 Capture Photos with Webcam
-bash
+│ └── outputX.wav # Output narrated files
+├── main.py # Run this file!
+└── README.md
+
+---
+
+## 🚀 How to Run
+
+```bash
+# Clone repo and cd into it
+git clone https://github.com/yourusername/storycrafter.git
+cd storycrafter
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run and take new photos
+python main.py --photo
+
+# Or run with existing images in the /images folder
+python main.py
+
+# 📌 At the end, press any key to view the narrated story frame-by-frame.
+
+🎮 Choose Your Genre
+You'll be prompted to select the story's theme:
+
+vbnet
 Copiar
 Editar
-python your_script.py --photo
-🟢 Use Existing Images
-bash
-Copiar
-Editar
-python your_script.py
-Then choose a genre and enjoy the storytelling magic!
+What genre do you wish the story to be in?
+Examples:
 
-👤 Voice Cloning Setup
-Train or download a speaker model from F5-TTS.
+🧙 Fantasy
 
-Place the .pt file in F5-TTS/ckpts/my_speak/
+👽 Sci-Fi
 
-Record 20s of reference audio (audio/reference_audio.wav)
+🕵️ Mystery
 
-Set the reference text used when training the speaker encoder.
+🎭 Drama
 
-🧠 How it Works (Simplified)
-📷 Capture or load images
+🎉 Comedy
 
-🧠 BLIP2 generates a caption
+🦸 Superhero
 
-🔍 YOLOv8 identifies objects
+...or make up your own!
 
-🧩 LLaMA combines caption + object data to write a plot continuation
+This genre is passed as context to the LLM.
 
-🗣️ F5-TTS reads it aloud in a cloned voice
+🧪 Voice Cloning (Optional)
+Record a 20-second voice sample and save it as:
+audio/reference_audio.wav
 
-🖼️ Story shown with subtitles and narration
+Edit the main.py to include a reference text that matches your voice (helps TTS align better).
 
-🥧 Example Use Case
-Take 5 photos of a toy story using your webcam.
+Install and configure F5-TTS or your preferred voice model.
 
-Choose "fantasy" as your genre.
+Make sure the CLI tool is available:
+f5-tts_infer-cli --text "Your story here" --ref audio/reference_audio.wav
 
-Watch and listen to your custom story unfold!
+📽️ Output
+Once the story and narration are generated, the program displays a slideshow:
 
-📜 License
-MIT License. Use responsibly.
+Each image appears
 
-❤️ Inspired by
-🤖 Salesforce BLIP2
+Subtitles are shown
 
-🔍 Ultralytics YOLO
+Audio is played frame-by-frame
 
-💬 Meta LLaMA
+You can save the audio (outputX.wav) from /tests/.
 
-🔊 F5-TTS
+🧠 Powered By
+BLIP-2 – Vision-Language model for captions
+
+YOLOv8 – Object detection
+
+LLaMA 2 – Story generation LLM
+
+F5-TTS – Voice synthesis
+
+💡 Future Ideas
+Add background music and transitions
+
+Support for longer stories (multi-paragraph)
+
+Web-based drag-and-drop UI
+
+Real-time mobile integration
+
+📄 License
+MIT License – feel free to modify and build on this project.

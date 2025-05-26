@@ -186,9 +186,9 @@ def show_story(texts, frames):
     for i, (text, frame) in enumerate(zip(texts, frames)):
         window_name = f"Image {i+1}"
         cv2.namedWindow(window_name)
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        bgr_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) # Change to be compatible with cv2 again
         draw_multiline_text(  # Put subtitles
-            rgb_frame,
+            bgr_frame,
             text,
             start_pos=(50, 100),
             font=cv2.FONT_HERSHEY_SIMPLEX,
@@ -198,7 +198,7 @@ def show_story(texts, frames):
             max_width=500
         )
 
-        cv2.imshow(window_name, rgb_frame)
+        cv2.imshow(window_name, bgr_frame)
         cv2.moveWindow(window_name, 0, 0) # I was having problems in it not showing on the main monitor
 
         waveform, sample_rate = torchaudio.load(f'tests/output{i+1}.wav')

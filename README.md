@@ -116,15 +116,3 @@ YOLOv8 – Object detection
 LLaMA 2 – Story generation LLM
 
 F5-TTS – Voice synthesis
-
-## 💡 Future Ideas
-Add background music and transitions
-
-Support for longer stories (multi-paragraph)
-
-Web-based drag-and-drop UI
-
-Real-time mobile integration
-
-## 📄 License
-MIT License – feel free to modify and build on this project.

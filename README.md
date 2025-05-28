@@ -1,4 +1,4 @@
-# 📸🧠 StoryCrafter: AI-Powered Visual Storytelling
+# 📸🧠 StoryTellerAI: An approach to Visual Storytelling
 
 Turn a series of images into a narrated short story using state-of-the-art AI models!  
 This project combines image captioning, object detection, LLM-based storytelling, and TTS voice narration.

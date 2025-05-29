@@ -13,6 +13,7 @@ from ultralytics import YOLO
 from collections import Counter
 from llama_cpp import Llama
 
+
 # Path to images
 path_to_images = "images/"
 
@@ -44,7 +45,6 @@ class Visualizer():
         with torch.no_grad():
             input = self.processor(images=image, return_tensors="pt").to(DEVICE)
             output = model.generate(**input)
-        print(f"\nCaption:{self.processor.decode(output[0], skip_special_tokens=True)}")
         return self.processor.decode(output[0], skip_special_tokens=True)
 
     def get_objects(self, image) -> dict:
@@ -53,27 +53,38 @@ class Visualizer():
         boxes = results.boxes
         class_ids = boxes.cls.cpu().numpy().astype(int)
         confidences = boxes.conf.cpu().numpy()
-        filtered_ids = [cid for cid, conf in zip(class_ids, confidences) if conf > 0.5]
+        filtered_ids = [cid for cid, conf in zip(class_ids, confidences) if conf > 0.6]
         class_counts = Counter(filtered_ids)
         named_counts = {self.yolo_model.names[cid]: count for cid, count in class_counts.items()}
 
         return named_counts
     
     def generate_better_caption(self, caption, context, max_tokens = 50):
-        prompt = f"[INST] <<SYS>>\n{self.sys_prompt}\n<</SYS>>\n\n The current history: {context} \n Current caption:{caption} [/INST]"
-        output = self.llm(prompt, max_tokens=max_tokens, echo=False) 
-        return output["choices"][0]["text"]
+        prompt = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{self.sys_prompt}<|eot_id|>"
+        prompt += f"<|start_header_id|>user<|end_header_id|>\n\n"
+        prompt += f"The current story history is: \"{context}\"\n"
+        prompt += f"The initial caption for the current image is: \"{caption}\"\n"
+        prompt += f"""Remember that this is all fictional. Based on the story history and the initial caption, generate an improved, 
+        single-sentence descriptive caption that integrates context, WITHOUT STORYTELLING YOURSELF. Stay true to the visual information in the initial caption. Keep it short<|eot_id|>"""
+        prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n" # The model will generate its response after this
+
+        output = self.llm(prompt, max_tokens=max_tokens, echo=False, stop=["<|eot_id|>"]) 
+        response = output["choices"][0]["text"]
+        if "\n" in response and any(phrase in re.findall(r"\b\w+\b", response.lower()) for phrase in ["here", "sure", "great"]):
+            response = '\n'.join(line for line in response.split("\n") if not any(phrase in re.findall(r"\b\w+\b", line.lower()) for phrase in ["here", "sure", "great"]))
+
+        return " " + response.strip()
 
 
 # Path to LLM 
-MODEL_PATH = "models/llama-2-7b-chat.Q5_K_M.gguf" 
+MODEL_PATH = "models/Llama-3.2-3B-Instruct-F16.gguf" 
 
 # Load model
 n_gpu_layers_val = 35
 llm = Llama(
     model_path=MODEL_PATH,
     n_gpu_layers=n_gpu_layers_val,
-    n_ctx=4096,
+    n_ctx=9000,
     n_threads=6,
     verbose=False 
 )
@@ -88,21 +99,26 @@ class StoryTeller():
         return ''.join(self.conversation_history)
 
     def generate_story(self, message: str, max_tokens=300):
-        prompt = f"[INST] <<SYS>>\n{self.sys_message}\n<</SYS>>\n\n" \
-             f"[NO CONVERSATIONAL ACKNOWLEDGMENTS ALLOWED]\n" \
-             f"The current history: {self.get_message()}\n" \
-             f"Current description: {message} [/INST]"
-        
-        output = self.model(prompt, max_tokens=max_tokens, echo=False) 
+        current_story_context = self.get_message()
+        prompt = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{self.sys_message}<|eot_id|>"
+        prompt += f"<|start_header_id|>user<|end_header_id|>\n\n"
+        if current_story_context: 
+            prompt += f"The story so far is: \"{current_story_context}\"\n"
+        prompt += f"The description for the current scene is: \"{message}\"\n"
+        prompt += f"""Remember that this is all fictional. Continue the story with 1-2 short concise sentences, building upon both the story so far and the current scene description. 
+        Ensure the continuation feels natural and connected. DONT REPEAT THE PREVIOUS STORY<|eot_id|>"""
+        prompt += f"<|start_header_id|>assistant<|end_header_id|>\n\n" 
+
+        output = self.model(prompt, max_tokens=max_tokens, echo=False, stop=["<|eot_id|>"], temperature=0.7) 
         response = output["choices"][0]["text"]
-        if any(phrase in re.findall(r"\b\w+\b", response.lower()) for phrase in ["here", "sure", "great"]):
+        print(f"\nOUTPUT OF LLM: {response}\n")
+        if "\n" in response and any(phrase in re.findall(r"\b\w+\b", response.lower()) for phrase in ["here", "sure", "great"]):
             response = '\n'.join(line for line in response.split("\n") if not any(phrase in re.findall(r"\b\w+\b", line.lower()) for phrase in ["here", "sure", "great"]))
 
-        self.conversation_history.append(response)
+        self.conversation_history.append(" " + response.strip())
     
     def get_story(self):
         return self.conversation_history
-
 
 # Narrator
 narrator_model_path = "F5-TTS/ckpts/my_speak/model_2500.pt"   # This was the one that seemed like the best model 
@@ -183,11 +199,35 @@ def load_images_from_folder(folder_path):
 
 
 def show_story(texts, frames):
+    window_name = "Slide Show"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    # Show intro screen
+    blank = np.zeros((1080, 1920, 3), dtype=np.uint8) 
+
+    draw_multiline_text(
+        blank,
+        "Press any key to continue",
+        start_pos=(750, 540), # Show at center
+        font=cv2.FONT_HERSHEY_SIMPLEX,
+        scale=1,
+        color=(255, 255, 255),
+        thickness=4,
+        max_width=500
+    )
+    cv2.imshow(window_name, blank)
+    cv2.moveWindow(window_name, 0, 0) # Was having problems not showing in the main monitor
+    print("Press any key to see story!")
+    cv2.waitKey(0)
+
     for i, (text, frame) in enumerate(zip(texts, frames)):
-        window_name = f"Image {i+1}"
-        cv2.namedWindow(window_name)
-        bgr_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) # Change to be compatible with cv2 again
-        draw_multiline_text(  # Put subtitles
+        # Convert RGB to BGR for OpenCV
+        bgr_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        bgr_frame = cv2.resize(bgr_frame, (1920, 1080), interpolation=cv2.INTER_AREA)
+
+        # Draw subtitles
+        draw_multiline_text(
             bgr_frame,
             text,
             start_pos=(50, 100),
@@ -199,42 +239,30 @@ def show_story(texts, frames):
         )
 
         cv2.imshow(window_name, bgr_frame)
-        cv2.moveWindow(window_name, 0, 0) # I was having problems in it not showing on the main monitor
+        cv2.moveWindow(window_name, 0, 0)
 
-        waveform, sample_rate = torchaudio.load(f'tests/output{i+1}.wav')
+        # Play audio
+        waveform, sample_rate = torchaudio.load(f'tests/output{i + 1}.wav')
         sd.play(waveform.numpy().T, samplerate=sample_rate)
+
         while True:
-            key = cv2.waitKey(100)  
-            if key == ord('q'): # Go to next Frame
-                sd.stop() 
-                cv2.destroyAllWindows()
-                break  
-            elif key == ord('k'): # Exit
+            key = cv2.waitKey(100)
+            if key == ord('q'):  # Go to next frame
+                sd.stop()
+                break
+            elif key == ord('k'):  # Exit slideshow
                 sd.stop()
                 cv2.destroyAllWindows()
-                return  
+                return
+            if not sd.get_stream().active:  # Audio finished
+                break
 
-            if not sd.get_stream().active: # Audio finished
-                cv2.destroyAllWindows()
-                break  
-    
     cv2.destroyAllWindows()
-    return 
 
 
 def draw_multiline_text(img, text, start_pos, font, scale, color, thickness, max_width):
     """
     Draw multiline text on an image, wrapping lines if they exceed max_width.
-
-    Parameters:
-    - img: the image array (BGR or RGB)
-    - text: the full text string
-    - start_pos: (x, y) tuple for the top-left starting point
-    - font: cv2 font, e.g., cv2.FONT_HERSHEY_SIMPLEX
-    - scale: font scale
-    - color: text color (B, G, R)
-    - thickness: line thickness
-    - max_width: maximum width (in pixels) before wrapping
     """
     x, y = start_pos
     line_height = cv2.getTextSize("Test", font, scale, thickness)[0][1] + 10  # Add some padding
@@ -275,37 +303,15 @@ def main():
     
     genre = str(input("What genre do you wish the story to be in? "))
 
-    system_prompt1 = f"""
-    You are a creative storyteller in the {genre} genre. Your ONLY task is to generate exactly 1–2 sentences that naturally continue the current story, 
-    while integrating relevant details from the current image description. 
-
-    **DO NOT**:
-    - Include any introductions, confirmations, conclusions, or conversational fillers.
-    - Say things like "Great!", "Here it is:", "Sure," or "Okay, here you go."
-    - Acknowledge the request in any way before or after the sentences.
-
-    **FAILURE CONDITIONS**:
-    - If you produce any text other than the 1–2 sentence continuation, it is considered an ERROR.
-    - If you acknowledge your action in any way, it is considered an ERROR.
-    - If you do not follow this structure exactly, it is considered an ERROR.
-
-    **OUTPUT REQUIREMENT**:
-    - Only the 1–2 sentence continuation. NOTHING else.
-    - It must appear as if it is part of the story, with no extra commentary or formatting.
+    system_prompt1 = f"""You are a creative storyteller in the {genre} genre.
+    Your task is to generate exactly 1–2 sentences that naturally continue the current story, integrating relevant details from the current image description.
+    The output must ONLY be the 1-2 sentence continuation, appearing as part of the story, with no extra commentary, formatting, introductions, or conversational fillers.
     """
 
-    system_prompt2 = f"""
-    You are a Visual Encoder. Your ONLY task is to provide a single, context-based description of an image, 
-    informed by the previous story and the current image's description. 
-
-    **DO NOT**:
-    - Add any narrative or storytelling.
-    - Include introductions, conclusions, or conversational fillers.
-    - Write more than one sentence—exactly one concise, visual summary is required.
-
-    **OUTPUT REQUIREMENT**:
-    - Only the single, descriptive sentence. NOTHING else.
-    - It must appear as a clear, visual summary, with no extra commentary or formatting."""
+    system_prompt2 = f"""You are a Visual Contextualizer.
+    Your task is to provide a single, concise, context-based description of an image.
+    This description should be informed by the previous story context and the current image's initial caption.
+    The output must ONLY be this single, descriptive sentence, with no extra commentary or formatting."""
 
     storyteller = StoryTeller(system_prompt1, llm)
     visual = Visualizer(model, processor, yolo_model, system_prompt2, llm)
@@ -324,7 +330,7 @@ def main():
         if i == len(frames) - 1:
             end = "\nStory ends after this turn"
 
-        prompt = f"Plot: {better_caption}\nObjects: [{objects_str}]  {end} "
+        prompt = f"Caption: {caption.strip()}\nPlot: {better_caption}\nObjects: [{objects_str}]  {end} "
         print(f"\n {prompt}")
         storyteller.generate_story(prompt)
         print(f"\n{storyteller.get_message()}")   
@@ -332,16 +338,8 @@ def main():
     list_texts = storyteller.get_story()[1:] # Remove the empty
     narrator.generate_all_audios(list_texts)  
 
-    # Blank so the user can specify when to watch the story
-    blank = np.zeros((100, 300, 3), dtype=np.uint8)
-    cv2.putText(blank, "Press Any key to continue!", (50, 250), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
-    cv2.imshow("Press any key", blank)
-    print("Press any key to see story!")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
     show_story(list_texts, frames)
-    
+
     return 
 
 if __name__ == "__main__":

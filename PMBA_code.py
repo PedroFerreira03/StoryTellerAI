@@ -13,7 +13,6 @@ from ultralytics import YOLO
 from collections import Counter
 from llama_cpp import Llama
 
-
 # Path to images
 path_to_images = "images/"
 

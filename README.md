@@ -56,10 +56,10 @@ git clone https://github.com/PedroFerreira03/StoryTellerAI
 cd StoryTellerAI
 
 # Run and take new photos using your webcam
-python main.py --photo
+python PMBA_code.py --photo
 
 # Or run with existing images from the /images folder
-python main.py
+python PMBA_code.py
 ```
 
 📌 At the end, press any key to view the narrated story frame-by-frame.

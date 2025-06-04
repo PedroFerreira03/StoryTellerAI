@@ -111,8 +111,8 @@ You can save the audio (outputX.wav) from /tests/.
 ## 🧠 Powered By
 BLIP-2 – Vision-Language model for captions
 
-YOLOv8 – Object detection
+YOLOv11 – Object detection
 
-LLaMA 2 – Story generation LLM
+LLaMA 3 – Story generation LLM
 
 F5-TTS – Voice synthesis

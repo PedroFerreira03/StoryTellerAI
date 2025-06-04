@@ -10,7 +10,7 @@ This project combines image captioning, object detection, LLM-based storytelling
 1. 🖼️ **Capture or Load Images**  
 2. 🧠 **Generate Smart Captions** using [BLIP-2](https://huggingface.co/Salesforce/blip2-opt-2.7b)  
 3. 🔍 **Detect Objects** with [YOLOv8](https://github.com/ultralytics/ultralytics)  
-4. 📖 **Write a Genre-Specific Story** with [LLaMA 2](https://ai.meta.com/llama/)  
+4. 📖 **Write a Genre-Specific Story** with [LLaMA 3](https://ai.meta.com/llama/)  
 5. 🔊 **Narrate the Story** using a cloned voice with [F5-TTS](https://github.com/TensorSpeech/FastSpeech2)  
 6. 🎬 **Display it with Subtitles and Audio** — like a slideshow movie!
 
@@ -23,7 +23,7 @@ This project combines image captioning, object detection, LLM-based storytelling
 - Pre-trained models:
   - `Salesforce/blip2-opt-2.7b`
   - `YOLOv8` variant (`yolo11x.pt`)
-  - `llama-2-7b-chat.Q5_K_M.gguf`
+  - `Llama-3.2-3B-Instruct-F16.gguf`
   - `F5-TTS` with cloned voice checkpoint
 
 ---
@@ -35,7 +35,7 @@ This project combines image captioning, object detection, LLM-based storytelling
 ├── models/               # All models stored here
 │   ├── blip2_model/
 │   ├── blip2_processor/
-│   ├── llama-2-7b-chat.Q5_K_M.gguf
+│   ├── Llama-3.2-3B-Instruct-F16.gguf
 │   └── yolo11x.pt
 ├── audio/
 │   ├──  reference_audio.wav     # 10-20s voice sample

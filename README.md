@@ -22,7 +22,7 @@ This project combines image captioning, object detection, LLM-based storytelling
 - GPU (recommended)
 - Pre-trained models:
   - `Salesforce/blip2-opt-2.7b`
-  - `YOLOv8` variant (`yolo11x.pt`)
+  - `YOLOv11` variant (`yolo11x.pt`)
   - `Llama-3.2-3B-Instruct-F16.gguf`
   - `F5-TTS` with cloned voice checkpoint
 

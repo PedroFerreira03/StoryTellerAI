@@ -22,3 +22,4 @@ ENV/
 # Folders
 */
 F5-TTS/
+*.py
